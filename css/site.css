@@ -1,0 +1,1161 @@
+/* ==========================================================================
+   MTP Trading & Projects — shared site styles
+   Built on the Bright Painters / BMS Automotive template: same structure,
+   same components, same type. Only the palette moves. The accent is
+   a copper taken from the pipework in their own photographs, over neutral graphite.
+   ========================================================================== */
+
+:root {
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --g-950: #0C0C0E;
+  --g-900: #15161A;
+  --g-850: #1A1C20;
+  --g-800: #212328;
+  --g-700: #2D3036;
+
+  --brand-300: #F7C29E;
+  --brand-400: #EE9256;
+  --brand-500: #D3692B;
+  --brand-600: #9D4A1B;
+  --navy-500: #9D4A1B;
+  --signal-500: #5FBE8C;
+
+  --chalk-50: #F8F8F6;
+  --ink-900: #0B0B0D;
+
+  /* spacing tokens — every gap on the page comes from this scale */
+  --s-1: 0.5rem;
+  --s-2: 1rem;
+  --s-3: 1.5rem;
+  --s-4: 2.5rem;
+  --s-5: 4rem;
+  --s-6: 6rem;
+  --s-7: 8rem;
+}
+
+@view-transition { navigation: auto; }
+
+html { scroll-behavior: smooth; }
+body { background: var(--g-950); }
+
+::selection { background: var(--brand-500); color: var(--g-950); }
+
+/* --------------------------------------------------------------------------
+   Signature: the accent rule
+   -------------------------------------------------------------------------- */
+
+.accent-rule {
+  display: inline-block;
+  vertical-align: middle;
+  width: 40px;
+  height: 2px;
+  border-radius: 1px;
+  background-image: linear-gradient(90deg, var(--brand-400) 0%, var(--brand-600) 62%, rgba(157, 74, 27, 0) 100%);
+}
+.accent-rule--wide { width: 72px; height: 3px; }
+
+/* a full-width version used to cap sections */
+.accent-edge {
+  height: 2px;
+  background-image: linear-gradient(90deg,
+    var(--brand-400) 0%,
+    var(--brand-600) 26%,
+    rgba(157, 74, 27, 0.25) 62%,
+    rgba(157, 74, 27, 0) 100%);
+}
+
+/* --------------------------------------------------------------------------
+   Pinned horizontal scroll
+   The section sticks to the viewport while the track slides left, then
+   releases and the page carries on down. JS sets --hscroll-h (the section's
+   total height) and the track's translateX; without JS, or with reduced
+   motion, it degrades to a normal swipeable row.
+   -------------------------------------------------------------------------- */
+
+.hscroll { position: relative; }
+
+.hscroll-pin {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* cross-start, not the default stretch: an inner block whose track overflows
+     otherwise gets nudged off the pin's left edge by the overflow amount */
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+/* Everything in the pin lives inside one plain block child. An over-wide track
+   as a direct flex item drags the whole column off its origin; inside a block
+   it simply overflows to the right and the pin clips it. */
+.hscroll-inner {
+  width: 100%;
+  min-width: 0;
+}
+
+/* The track runs full-bleed, so it needs its own gutter to line the first card
+   up with the page container's left edge (and to stop the last card sitting
+   flush against the right edge at the end of the run). */
+.hscroll-gutter {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+@media (min-width: 640px) {
+  .hscroll-gutter {
+    padding-left: max(2rem, calc((100vw - 76rem) / 2 + 2rem));
+    padding-right: max(2rem, calc((100vw - 76rem) / 2 + 2rem));
+  }
+}
+
+.hscroll-track {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.hscroll-card { flex: 0 0 auto; }
+
+/* Mobile-only variant: a horizontal run on a phone, the original grid above
+   768px. The shell keeps the heading and progress bar on the page measure once
+   the pin stops applying. */
+.hscroll--mobile .hscroll-card { width: 20rem; }
+
+/* A pinned run owns the whole screen, so the cards should fill it rather than
+   sit in a band with dead space underneath. The track sets the height and
+   stretch does the rest, which also keeps every card in a row the same size. */
+@media (max-width: 767px) {
+  /* Applies to every pinned run, not just the mobile-only ones, so the home
+     and services rows are sized and spaced identically. */
+  /* The heading, button and padding around the track are fixed heights, so the
+     track takes whatever is left. A flat svh value overflows short phones. */
+  .hscroll .hscroll-track { min-height: max(14rem, calc(100svh - 22rem)); }
+  .hscroll .hscroll-card {
+    width: 20rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.6rem 1.5rem;
+  }
+
+  /* Anchor the pinned block below the fixed header instead of centring it.
+     Centring pushed the top of the block (the eyebrow, and part of the
+     heading) up underneath the header where it could not be read. */
+  .hscroll.is-pinned .hscroll-pin {
+    justify-content: flex-start;
+    padding-top: 5.25rem;
+  }
+
+  /* The intro paragraph is the one piece the cards immediately repeat, so it
+     is what gives way to keep everything else inside one screen. */
+  .hscroll.is-pinned .hscroll-intro { display: none; }
+}
+
+/* While a section is pinned its cards are already on screen and sliding
+   sideways; a second vertical reveal on top of that just reads as a stutter. */
+.hscroll.is-pinned .reveal-item {
+  opacity: 1 !important;
+  transform: none !important;
+  translate: none !important;
+  transition: none !important;
+}
+
+@media (min-width: 768px) {
+  .hscroll--mobile .hscroll-pin { display: block; overflow: visible; height: auto; position: static; }
+  /* The unpinned fallback sizes the inner box to its content so the row can be
+     swiped. At md the same section is a normal grid again, so that has to be
+     undone or the grid overflows the page. */
+  /* Equal-specificity rules later in the file were winning and leaving
+     overflow-y:hidden on the pin, which clipped content out of view — so the
+     observer never saw it and those blocks stayed faded out. Extra class on the
+     selector settles it regardless of order. */
+  .hscroll.hscroll--mobile:not(.is-pinned) .hscroll-inner { width: 100%; min-width: 0; }
+  .hscroll.hscroll--mobile:not(.is-pinned) .hscroll-pin {
+    overflow: visible;
+    scroll-snap-type: none;
+    height: auto;
+    position: static;
+  }
+  .hscroll--mobile .hscroll-track { display: grid; gap: 1rem; transform: none !important; }
+  .hscroll--mobile .hscroll-card { width: auto; }
+  .hscroll--mobile .hscroll-gutter { padding-left: 0; padding-right: 0; }
+  .hscroll--mobile .hscroll-shell {
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: 2rem;
+  }
+}
+
+@media (max-width: 767px) {
+  /* the heading column sits on the page gutter; only the track runs full-bleed */
+  .hscroll--mobile .hscroll-shell > *:not(.hscroll-track) {
+    padding-inline: 1.25rem;
+  }
+  .hscroll--mobile .hscroll-shell { display: block; }
+  .hscroll--mobile .hscroll-shell > .hscroll-track { margin-top: 2rem; }
+}
+
+/* Two-row variant — halves the track length for long galleries. */
+.hscroll-track--rows {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* Fallback state: a native swipeable row. Browsers without scroll timelines
+   get this instead of a JS-driven pin — native touch scrolling is handled by
+   the compositor, so it stays smooth where a scroll handler cannot. */
+.hscroll:not(.is-pinned) .hscroll-pin {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+@media (max-width: 767px) {
+  /* only the phone fallback row loses its top padding */
+  .hscroll:not(.is-pinned) .hscroll-pin { padding-top: 0; }
+}
+/* the pin's height rule only applies when pinned; unpinned it wraps content */
+.hscroll:not(.is-pinned) .hscroll-inner { width: max-content; min-width: 100%; }
+.hscroll:not(.is-pinned) .hscroll-track { min-height: 0; }
+/* the progress bar means nothing without the pin */
+.hscroll:not(.is-pinned) .hscroll-progress { display: none; }
+.hscroll:not(.is-pinned) .hscroll-pin::-webkit-scrollbar { display: none; }
+.hscroll:not(.is-pinned) .hscroll-card { scroll-snap-align: start; }
+/* snap to the gutter, not the container edge, so a snapped card still lines up
+   with the page margin */
+.hscroll:not(.is-pinned) .hscroll-pin { scroll-padding-left: 1.25rem; }
+@media (min-width: 640px) {
+  .hscroll:not(.is-pinned) .hscroll-pin {
+    scroll-padding-left: max(2rem, calc((100vw - 76rem) / 2 + 2rem));
+  }
+}
+
+.hscroll.is-pinned .hscroll-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+}
+
+/* The pinned run is driven by a scroll-driven animation wherever it is
+   supported, so the track slides on the compositor rather than off a scroll
+   handler — no per-frame JS, no momentum-scroll lag on phones. JS only
+   measures the distance and sets --hs-distance. The rAF path in site.js is the
+   fallback for browsers without scroll timelines. */
+.hscroll.is-pinned {
+  view-timeline-name: --hs;
+  view-timeline-axis: block;
+}
+
+@supports (animation-timeline: view()) {
+  .hscroll.is-pinned.has-timeline .hscroll-track {
+    animation: hscroll-slide linear both;
+    animation-timeline: --hs;
+    animation-range: contain 0% contain 100%;
+  }
+  .hscroll.is-pinned.has-timeline .hscroll-progress i {
+    animation: hscroll-fill linear both;
+    animation-timeline: --hs;
+    animation-range: contain 0% contain 100%;
+  }
+}
+
+@keyframes hscroll-slide {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(calc(-1 * var(--hs-distance, 0px)), 0, 0); }
+}
+@keyframes hscroll-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* progress bar shows how far through the horizontal run you are */
+.hscroll-progress {
+  position: relative;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(156, 156, 150, 0.16);
+  overflow: hidden;
+}
+.hscroll-progress i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: 1px;
+  background-image: linear-gradient(90deg, var(--brand-400), var(--brand-600));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hscroll.is-pinned .hscroll-pin { position: static; height: auto; }
+  .hscroll.is-pinned { height: auto !important; }
+  .hscroll-track { transform: none !important; }
+}
+
+/* --------------------------------------------------------------------------
+   Texture
+   -------------------------------------------------------------------------- */
+
+/* grain texture removed — it hazed over the photography */
+
+/* Hero entrance.
+   Everything in the hero holds back for a beat on load so the photograph
+   registers before the type arrives over it, then the lines come in in order.
+   Scroll reveals elsewhere on the page are untouched. */
+.photo-host .hero-eyebrow { transition-delay: 300ms; }
+
+.photo-host h1 .reveal-mask-inner {
+  transition-delay: calc(400ms + var(--d, 0) * 110ms);
+}
+
+.photo-host h1 ~ p,
+.photo-host .hero-actions,
+.photo-host .hero-meta {
+  transition-delay: 660ms;
+}
+.photo-host .hero-actions { transition-delay: 760ms; }
+.photo-host .hero-meta { transition-delay: 860ms; }
+
+/* The credentials bar is not part of the hero's load sequence — it waits until
+   you have actually scrolled it into view (see .reveal-late in site.js). */
+.photo-host .cred-bar .reveal-item {
+  transition-delay: calc(var(--d, 0) * 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-host .hero-eyebrow,
+  .photo-host h1 .reveal-mask-inner,
+  .photo-host h1 ~ p,
+  .photo-host .hero-actions,
+  .photo-host .hero-meta,
+  .photo-host .cred-bar .reveal-item { transition-delay: 0ms !important; }
+}
+
+/* Service card icon — a visual anchor so a long run of cards is scannable
+   rather than a wall of headings. */
+.svc-icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 1rem;
+  border-radius: 0.6rem;
+  color: var(--brand-400);
+  background: rgba(211, 105, 43, 0.1);
+  border: 1px solid rgba(238, 146, 86, 0.22);
+  transition: background-color 0.35s var(--ease-out), border-color 0.35s var(--ease-out), transform 0.35s var(--ease-spring);
+}
+.spec-card:hover .svc-icon {
+  background: rgba(211, 105, 43, 0.18);
+  border-color: rgba(238, 146, 86, 0.45);
+  transform: translateY(-2px);
+}
+
+/* A lighter surface with a lit top edge. Two adjacent near-black sections read
+   as one continuous block otherwise — this gives the eye a boundary. */
+.section-step, .section-step-soft {
+  background-image: linear-gradient(180deg, #1F2025 0%, #191A1E 58%, #121316 100%);
+  border-top: 1px solid rgba(156, 156, 150, 0.16);
+  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+.section-step::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(44%, 22rem);
+  height: 2px;
+  background-image: linear-gradient(90deg, var(--brand-400), rgba(157, 74, 27, 0));
+}
+
+/* Credentials bar — one continuous surface split by hairlines, instead of four
+   separate tiles floating over the photograph. */
+.cred-bar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(21, 29, 39, 0.86) 0%, rgba(11, 15, 21, 0.9) 100%);
+  border: 1px solid rgba(156, 156, 150, 0.18);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 20px 44px -26px rgba(0, 0, 0, 0.9);
+}
+@media (min-width: 900px) {
+  .cred-bar { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.cred-cell {
+  position: relative;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(156, 156, 150, 0.13);
+  border-left: 1px solid rgba(156, 156, 150, 0.13);
+  transition: background-color 0.35s var(--ease-out);
+}
+.cred-cell:nth-child(-n+2) { border-top: 0; }
+.cred-cell:nth-child(odd) { border-left: 0; }
+@media (min-width: 900px) {
+  .cred-cell { padding: 1.15rem 1.5rem; border-top: 0; }
+  .cred-cell:first-child { border-left: 0; }
+  .cred-cell:nth-child(odd) { border-left: 1px solid rgba(156, 156, 150, 0.13); }
+  .cred-cell:first-child { border-left: 0; }
+}
+.cred-cell::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand-400), rgba(157, 74, 27, 0));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--ease-out);
+}
+.cred-cell:hover { background-color: rgba(211, 105, 43, 0.07); }
+.cred-cell:hover::after { transform: scaleX(1); }
+
+.cred-label {
+  font-family: '"IBM Plex Mono"', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brand-400);
+}
+.cred-value {
+  margin-top: 0.3rem;
+  font-family: '"Saira Condensed"', sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.15;
+  text-transform: uppercase;
+  color: var(--chalk-50);
+}
+
+/* A hard edge where the photographic hero ends and the workshop section
+   begins — without it the two dark surfaces run together. */
+.hero-divide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  height: 3px;
+  background-image: linear-gradient(90deg,
+    var(--brand-400) 0%,
+    var(--brand-500) 22%,
+    var(--brand-600) 46%,
+    rgba(157, 74, 27, 0.35) 72%,
+    rgba(157, 74, 27, 0.12) 100%);
+  box-shadow: 0 -18px 34px -14px rgba(12, 12, 14, 0.95);
+}
+
+/* --------------------------------------------------------------------------
+   Reveal choreography
+   -------------------------------------------------------------------------- */
+
+/* Reveals move with the independent `translate`/`scale` properties rather than
+   `transform`.
+
+   That is not a preference. Cards here are both reveal targets and hover
+   targets, and `.reveal-group.is-visible .reveal-item { transform: ... }` is
+   more specific than `.spec-card:hover { transform: ... }` — so a
+   transform-based reveal wins the cascade and silently kills the hover lift on
+   every card and tile. `translate` composes with `transform` instead of
+   competing with it, so the two systems never meet. */
+
+.reveal {
+  opacity: 0;
+  translate: 0 18px;
+  transition: opacity 0.7s var(--ease-spring), translate 0.7s var(--ease-spring);
+}
+.reveal.is-visible { opacity: 1; translate: none; }
+
+.reveal-media {
+  opacity: 0;
+  translate: 0 28px;
+  scale: 0.965;
+  transition: opacity 0.85s var(--ease-spring), translate 0.85s var(--ease-spring), scale 0.85s var(--ease-spring);
+}
+.reveal-media.is-visible { opacity: 1; translate: none; scale: none; }
+
+.reveal-mask { overflow: hidden; }
+.reveal-mask .reveal-mask-inner {
+  display: block;
+  transform: translateY(118%);
+  transition: transform 0.9s var(--ease-spring);
+  transition-delay: calc(var(--d, 0) * 130ms);
+}
+.reveal-mask.is-visible .reveal-mask-inner { transform: translateY(0); }
+
+.reveal-group .reveal-item {
+  opacity: 0;
+  translate: 0 24px;
+  transition: opacity 0.7s var(--ease-spring), translate 0.7s var(--ease-spring);
+  /* capped — without it a long gallery staggers for well over a second */
+  transition-delay: min(calc(var(--d, 0) * 85ms), 620ms);
+}
+.reveal-group.is-visible .reveal-item { opacity: 1; translate: none; }
+
+.reveal-group .reveal-wipe {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.95s var(--ease-out);
+  transition-delay: calc(var(--d, 0) * 85ms);
+}
+.reveal-group.is-visible .reveal-wipe { clip-path: inset(0 0 0 0); }
+
+/* Lateral groups: items sweep in from the side rather than rising, so a long
+   run of cards reads left-to-right across each row instead of one long
+   top-to-bottom column. overflow-x is clipped (not scrolled) so the offset
+   start position can't widen the page. */
+.reveal-group.reveal-lateral {
+  overflow-x: clip;
+  overflow-y: visible;
+}
+/* A track is transformed, and a clip travels with the transform — it would
+   slice the cards as the row slides. Tracks never clip. */
+.hscroll-track.reveal-lateral,
+.hscroll-track { overflow: visible; }
+.reveal-group.reveal-lateral .reveal-item {
+  translate: -56px 0;
+  transition-duration: 0.78s;
+}
+.reveal-group.reveal-lateral .reveal-item[data-from="right"] { translate: 56px 0; }
+.reveal-group.reveal-lateral.is-visible .reveal-item { translate: none; }
+
+/* directional variants — used where the layout has a clear reading direction */
+.reveal-left,
+.reveal-right {
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-spring), translate 0.8s var(--ease-spring);
+}
+.reveal-left { translate: -34px 0; }
+.reveal-right { translate: 34px 0; }
+.reveal-left.is-visible,
+.reveal-right.is-visible { opacity: 1; translate: none; }
+
+/* a rule that draws itself in */
+.reveal-draw {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.85s var(--ease-out);
+}
+.reveal-draw.is-visible { transform: scaleX(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal,
+  .reveal-media,
+  .reveal-left,
+  .reveal-right,
+  .reveal-draw,
+  .reveal-mask .reveal-mask-inner,
+  .reveal-group .reveal-item,
+  .reveal-group.reveal-lateral .reveal-item,
+  .reveal-group .reveal-wipe {
+    opacity: 1 !important;
+    transform: none !important;
+    translate: none !important;
+    scale: none !important;
+    clip-path: none !important;
+    transition: none !important;
+  }
+  .photo-bg { transform: none !important; }
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 6px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--brand-400) 0%, var(--brand-500) 55%, var(--brand-600) 100%);
+  color: var(--g-950);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 10px 24px -8px rgba(211, 105, 43, 0.6),
+    0 2px 6px rgba(12, 12, 14, 0.5);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-spring), filter 0.35s var(--ease-spring);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 16px 34px -8px rgba(211, 105, 43, 0.75),
+    0 4px 10px rgba(12, 12, 14, 0.55);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:focus-visible { outline: 2px solid var(--chalk-50); outline-offset: 3px; }
+
+.btn-ghost {
+  border: 1px solid rgba(156, 156, 150, 0.34);
+  color: var(--chalk-50);
+  background-color: rgba(248, 248, 246, 0.02);
+  transition: transform 0.35s var(--ease-spring), border-color 0.35s var(--ease-spring), background-color 0.35s var(--ease-spring);
+}
+.btn-ghost:hover {
+  transform: translateY(-2px);
+  border-color: rgba(238, 146, 86, 0.7);
+  background-color: rgba(211, 105, 43, 0.1);
+}
+.btn-ghost:active { transform: translateY(0); }
+.btn-ghost:focus-visible { outline: 2px solid var(--brand-400); outline-offset: 3px; }
+
+.btn-dark {
+  background: linear-gradient(180deg, #282A30 0%, var(--ink-900) 100%);
+  color: var(--chalk-50);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 10px 24px -10px rgba(11, 11, 13, 0.6);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-spring);
+}
+.btn-dark:hover { transform: translateY(-2px); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 16px 30px -10px rgba(11, 11, 13, 0.7); }
+.btn-dark:active { transform: translateY(0); }
+.btn-dark:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 3px; }
+
+/* --------------------------------------------------------------------------
+   Surfaces — base (950) -> elevated (card) -> floating (form / plate)
+   -------------------------------------------------------------------------- */
+
+.spec-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(158deg, #24262B 0%, #16171B 100%);
+  border: 1px solid rgba(156, 156, 150, 0.13);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.035) inset,
+    0 22px 44px -26px rgba(0, 0, 0, 0.9);
+  transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring), border-color 0.4s var(--ease-spring);
+}
+.spec-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background-image: linear-gradient(90deg, var(--brand-400) 0%, var(--brand-600) 70%, rgba(157, 74, 27, 0) 100%);
+  transition: width 0.5s var(--ease-out);
+}
+.spec-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(238, 146, 86, 0.3);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 10px 20px -6px rgba(211, 105, 43, 0.2),
+    0 30px 52px -22px rgba(0, 0, 0, 0.9);
+}
+.spec-card:hover::before { width: 100%; }
+
+.plate {
+  /* No backdrop-filter here: blurring what's behind every plate is one of the
+     most expensive things you can ask a phone to do while scrolling. */
+  background: linear-gradient(160deg, rgba(48, 50, 56, 0.95) 0%, rgba(18, 19, 22, 0.96) 100%);
+  border: 1px solid rgba(238, 146, 86, 0.22);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 12px 26px -14px rgba(0, 0, 0, 0.75);
+  transition: transform 0.35s var(--ease-spring), border-color 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
+}
+.plate:hover {
+  transform: translateY(-3px);
+  border-color: rgba(238, 146, 86, 0.5);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 8px 18px -6px rgba(211, 105, 43, 0.25), 0 18px 34px -16px rgba(0, 0, 0, 0.8);
+}
+
+.panel-light {
+  background: #FFFFFF;
+  border: 1px solid rgba(11, 11, 13, 0.09);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 26px 50px -26px rgba(11, 11, 13, 0.28);
+}
+
+.chip {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  border: 1px solid rgba(156, 156, 150, 0.2);
+  background: rgba(211, 105, 43, 0.07);
+  color: #B6B6AE;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  transition: border-color 0.3s var(--ease-out), background-color 0.3s var(--ease-out), color 0.3s var(--ease-out);
+}
+.spec-card:hover .chip {
+  border-color: rgba(238, 146, 86, 0.38);
+  background: rgba(211, 105, 43, 0.14);
+  color: #D8D8D0;
+}
+
+/* --------------------------------------------------------------------------
+   Image frames — gradient scrim + cool colour wash unifies the workshop photos
+   -------------------------------------------------------------------------- */
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s var(--ease-out);
+}
+/* The blue multiply wash that used to sit here tinted every workshop photo.
+   Removed — the photographs run untouched; only the caption gradient below
+   remains, and only at the bottom edge where captions actually sit. */
+.frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  /* Confined to the lower third, where captions sit — the rest of each
+     photograph stays untouched. */
+  background: linear-gradient(0deg,
+    rgba(12, 12, 14, 0.92) 0%,
+    rgba(12, 12, 14, 0.70) 16%,
+    rgba(12, 12, 14, 0.18) 40%,
+    rgba(12, 12, 14, 0) 58%);
+  pointer-events: none;
+}
+/* z-index only — setting `position` here would out-specify Tailwind's `absolute`
+   on the caption and drop it out of the frame. */
+.frame > .frame-body { z-index: 3; }
+
+.frame-zoom:hover img { transform: scale(1.055); }
+
+/* --------------------------------------------------------------------------
+   Navigation
+   -------------------------------------------------------------------------- */
+
+/* Before it goes opaque the header sits straight on the photo. A gradient
+   behind just the bar keeps the logo and nav readable without putting a wash
+   over the whole picture. */
+/* z-index 0 rather than -1. A negative-z pseudo-element on a position:fixed
+   parent forces the header into its own backdrop root, and iOS paints that
+   root opaque black for a frame or two when the blur below switches on — the
+   flicker you see the moment the page starts scrolling. Content is lifted to
+   z-index 1 instead so the gradient still sits behind it. */
+.site-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: linear-gradient(180deg, rgba(12, 12, 14, 0.8) 0%, rgba(12, 12, 14, 0.45) 58%, rgba(12, 12, 14, 0) 100%);
+  opacity: 1;
+  transition: opacity 0.4s var(--ease-out);
+  pointer-events: none;
+}
+.site-header.is-stuck::before { opacity: 0; }
+
+.site-header > * { position: relative; z-index: 1; }
+
+.site-header {
+  /* Explicit zero-alpha tint, not `transparent`. `transparent` is rgba(0,0,0,0),
+     and an engine interpolating it un-premultiplied toward the dark tint below
+     passes through solid black on the way. */
+  background-color: rgba(12, 12, 14, 0);
+  border-bottom: 1px solid transparent;
+  /* backdrop-filter is deliberately NOT transitioned: animating it is what
+     makes iOS rebuild the backdrop root mid-scroll and flash. Declared at
+     blur(0) instead of omitted, so the backdrop root exists from first paint
+     and the stuck state only changes the radius — visually identical to no
+     blur here, but nothing gets built or torn down mid-scroll. */
+  transition: background-color 0.4s var(--ease-out), border-color 0.4s var(--ease-out);
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
+  /* Pin the compositing layer so the class toggle never promotes/demotes it. */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.site-header.is-stuck {
+  background-color: rgba(12, 12, 14, 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.nav-link { position: relative; transition: color 0.3s var(--ease-out); }
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  height: 2px;
+  width: 0;
+  background-image: linear-gradient(90deg, var(--brand-400) 0%, var(--brand-600) 100%);
+  transition: width 0.35s var(--ease-out);
+}
+.nav-link:hover { color: var(--brand-300); }
+.nav-link:hover::after { width: 100%; }
+.nav-link:focus-visible { outline: 2px solid var(--brand-400); outline-offset: 5px; }
+.nav-link.is-active { color: var(--brand-400); }
+.nav-link.is-active::after { width: 100%; }
+
+.mobile-nav {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: var(--g-950);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  opacity: 0;
+  visibility: hidden;
+  /* scales up into place rather than down: a closed panel at scale(1.03) is
+     wider than the viewport and makes the whole page scroll sideways */
+  transform: scale(0.97);
+  transition: opacity 0.45s var(--ease-out), transform 0.45s var(--ease-out), visibility 0s linear 0.45s;
+}
+.mobile-nav.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+  transition: opacity 0.45s var(--ease-out), transform 0.45s var(--ease-out), visibility 0s linear 0s;
+}
+
+.hamburger { position: relative; z-index: 50; }
+.hamburger span { transition: transform 0.35s var(--ease-spring), opacity 0.25s var(--ease-out); transform-origin: center; }
+.hamburger.is-open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.hamburger.is-open span:nth-child(2) { opacity: 0; }
+.hamburger.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* --------------------------------------------------------------------------
+   Section backdrops
+   -------------------------------------------------------------------------- */
+
+.bg-hero {
+  background-image:
+    radial-gradient(ellipse 70% 55% at 10% 0%, rgba(211, 105, 43, 0.2), transparent 62%),
+    radial-gradient(ellipse 55% 50% at 96% 12%, rgba(157, 74, 27, 0.22), transparent 64%),
+    radial-gradient(ellipse 90% 60% at 50% 105%, rgba(95, 190, 140, 0.07), transparent 60%),
+    linear-gradient(180deg, #0C0C0E 0%, #101822 52%, #0C0C0E 100%);
+}
+
+.bg-quiet {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 88% 8%, rgba(211, 105, 43, 0.08), transparent 62%),
+    linear-gradient(180deg, #15161A 0%, #0C0C0E 100%);
+}
+
+.bg-band {
+  background-image:
+    linear-gradient(92deg, rgba(12, 12, 14, 0.95) 0%, rgba(12, 12, 14, 0.8) 46%, rgba(12, 12, 14, 0.3) 100%),
+    url('../images/bg/band.jpg');
+  background-size: cover;
+  background-position: 70% center;
+}
+
+@media (max-width: 767px) {
+  .bg-band {
+    background-image:
+      linear-gradient(180deg, rgba(12, 12, 14, 0.72) 0%, rgba(12, 12, 14, 0.86) 45%, rgba(12, 12, 14, 0.95) 100%),
+      url('../images/bg/band.jpg');
+    background-position: 62% center;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Photo backdrops — a real photograph behind a section, scrimmed hard enough
+   that body copy still passes contrast. The image sits in its own layer so it
+   can be parallaxed without moving the content.
+   -------------------------------------------------------------------------- */
+
+/* Clipping box. The image inside overscans so parallax has travel; this keeps
+   that overscan from spilling out over neighbouring sections. */
+.photo-clip {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  view-timeline-name: --photo-scroll;
+  view-timeline-axis: block;
+}
+
+.photo-bg {
+  position: absolute;
+  inset: -4% 0 -4% 0;   /* just enough travel for the drift, no more crop than needed */
+  background-image: var(--bg);
+  background-position: var(--bg-pos, center);
+  background-size: cover;
+  /* Own compositing layer so its drift never invalidates the scrim, the grain
+     or the content sitting above it. */
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Hero photo layers run the full height of the hero on phones. Capping them at
+   100svh framed every page identically, but the home hero is taller than one
+   screen once the credentials bar is in it, so the photo stopped dead behind
+   that bar and left a flat strip under it. */
+
+/* Hero backgrounds sit flush: the overscan that gives the drift room to move
+   also costs ~8% of the picture to cropping, and on a hero seeing the whole
+   car matters more than the parallax. */
+.photo-host:has(.photo-scrim--hero) .photo-bg {
+  inset: 0;
+  animation: none;
+  transform: none;
+}
+
+/* Art direction: a phone is far taller than it is wide, so a landscape crop
+   gets scaled up hard by background-size:cover and most of the picture is lost.
+   Portrait crops of the same photo show much more of the scene. */
+@media (max-width: 767px) {
+  .photo-bg {
+    background-image: var(--bg-sm, var(--bg));
+    background-position: var(--bg-pos-sm, var(--bg-pos, center));
+  }
+}
+
+/* Parallax runs as a scroll-driven animation so it lives on the compositor and
+   never touches the main thread — the difference between smooth and jittery on
+   a phone. Browsers without support simply get a static background. */
+@supports (animation-timeline: view()) {
+  .photo-bg {
+    animation: photo-drift linear both;
+    animation-timeline: --photo-scroll;
+    animation-range: cover 0% cover 100%;
+  }
+}
+@keyframes photo-drift {
+  from { transform: translate3d(0, -4.5%, 0); }
+  to   { transform: translate3d(0, 4.5%, 0); }
+}
+
+/* On a phone the parallax buys very little — the backgrounds are heavily
+   scrimmed — but it means a second scroll-driven animation and an extra
+   composited layer per section competing with the card track. Dropped. */
+@media (max-width: 767px) {
+  .photo-bg {
+    animation: none !important;
+    transform: none;
+    will-change: auto;
+  }
+  .photo-clip { view-timeline-name: none; }
+}
+
+.photo-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* deep scrim for hero sections, where large type sits over the photo */
+/* Mirror of the hero scrim, for heroes whose copy sits on the right. Desktop
+   only — on a phone the copy runs full width, so the mobile vertical gradient
+   applies instead. Without this guard it out-specified the mobile rule and left
+   a right-aligned hero paragraph sitting on the bright part of the photo. */
+@media (min-width: 768px) {
+.photo-scrim--hero.photo-scrim--right {
+  background-image:
+    linear-gradient(265deg,
+      rgba(12, 12, 14, 0.86) 0%,
+      rgba(12, 12, 14, 0.62) 26%,
+      rgba(12, 12, 14, 0.20) 50%,
+      rgba(12, 12, 14, 0) 68%),
+    linear-gradient(180deg,
+      rgba(12, 12, 14, 0.42) 0%,
+      rgba(12, 12, 14, 0) 18%,
+      rgba(12, 12, 14, 0) 68%,
+      rgba(12, 12, 14, 0.55) 100%);
+}
+}
+
+.photo-scrim--hero {
+  background-image:
+    linear-gradient(95deg,
+      rgba(12, 12, 14, 0.80) 0%,
+      rgba(12, 12, 14, 0.54) 26%,
+      rgba(12, 12, 14, 0.15) 50%,
+      rgba(12, 12, 14, 0) 66%),
+    linear-gradient(180deg,
+      rgba(12, 12, 14, 0.42) 0%,
+      rgba(12, 12, 14, 0) 18%,
+      rgba(12, 12, 14, 0) 68%,
+      rgba(12, 12, 14, 0.55) 100%);
+}
+
+/* On a narrow screen the horizontal gradient covers the whole photo, so the
+   mobile scrim leans vertical instead and lets the image through. */
+@media (max-width: 767px) {
+  /* Lighter than the desktop scrim: the portrait crop is the point of the hero
+     on a phone, so it only darkens enough to hold the type. */
+  /* Weighted low: the top half stays clear so the car reads, and the darkening
+     builds over the lower half where the copy and plates actually sit. */
+  .photo-scrim--hero {
+    background-image:
+      linear-gradient(180deg,
+        rgba(12, 12, 14, 0.10) 0%,
+        rgba(12, 12, 14, 0.02) 20%,
+        rgba(12, 12, 14, 0.26) 48%,
+        rgba(12, 12, 14, 0.62) 74%,
+        rgba(12, 12, 14, 0.88) 100%);
+  }
+
+  /* Bright photographs (white workshops, light bodywork) need a firmer ramp
+     behind the copy than dark ones do. The top stays open either way. */
+  .photo-scrim--hero.photo-scrim--bright {
+    background-image:
+      linear-gradient(180deg,
+        rgba(12, 12, 14, 0.08) 0%,
+        rgba(12, 12, 14, 0.04) 14%,
+        rgba(12, 12, 14, 0.34) 32%,
+        rgba(12, 12, 14, 0.54) 54%,
+        rgba(12, 12, 14, 0.72) 78%,
+        rgba(12, 12, 14, 0.88) 100%);
+  }
+
+  .photo-bg { inset: -5% 0 -5% 0; }
+}
+
+/* lighter scrim for mid-page sections that only carry headings and cards */
+/* Mid-page backdrops stay dark so the cards over them read, but the blue
+   colour wash is gone — it was tinting the photography. */
+.photo-scrim--section {
+  background-image:
+    linear-gradient(180deg, rgba(12, 12, 14, 0.86) 0%, rgba(12, 12, 14, 0.8) 40%, rgba(12, 12, 14, 0.88) 100%);
+}
+
+.photo-host { position: relative; isolation: isolate; }
+
+/* The scrim only darkens where the copy sits, so hero text carries its own
+   contrast rather than relying on a blanket wash over the photograph. */
+.photo-host h1,
+.photo-host h2 {
+  text-shadow:
+    0 1px 2px rgba(12, 12, 14, 0.9),
+    0 2px 8px rgba(12, 12, 14, 0.95),
+    0 3px 20px rgba(12, 12, 14, 0.9),
+    0 6px 44px rgba(12, 12, 14, 0.8);
+}
+.photo-host p,
+.photo-host dl,
+.photo-host li {
+  text-shadow:
+    0 1px 2px rgba(12, 12, 14, 0.95),
+    0 1px 7px rgba(12, 12, 14, 0.95),
+    0 2px 18px rgba(12, 12, 14, 0.85),
+    0 4px 36px rgba(12, 12, 14, 0.7);
+}
+/* The eyebrow is 11px type that lands wherever the photo happens to be
+   brightest. Rather than darken the whole image for one small label, it sits
+   on its own plate — which reads as a deliberate tag anyway. */
+.photo-host .hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.9rem 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(12, 12, 14, 0.62);
+  border: 1px solid rgba(156, 156, 150, 0.2);
+  text-shadow: 0 1px 2px rgba(12, 12, 14, 0.9);
+}
+/* .hscroll-pin is excluded because it sets its own `position: sticky`, which a
+   blanket `position: relative` here would out-specify and silently break. */
+.photo-host > *:not(.photo-clip):not(.photo-scrim):not(.hero-divide):not(.hscroll-pin) {
+  position: relative;
+  z-index: 2;
+}
+.photo-host > .hscroll-pin { z-index: 2; }
+
+/* --------------------------------------------------------------------------
+   Forms
+   -------------------------------------------------------------------------- */
+
+.field {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid rgba(11, 11, 13, 0.16);
+  background: #FAFAF8;
+  padding: 0.8rem 1rem;
+  color: var(--ink-900);
+  transition: border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+.field::placeholder { color: rgba(11, 11, 13, 0.36); }
+.field:focus {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px rgba(211, 105, 43, 0.16);
+  outline: none;
+}
+.field:focus-visible { outline: none; }
+
+.field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(11, 11, 13, 0.58);
+}
+
+/* --------------------------------------------------------------------------
+   Misc
+   -------------------------------------------------------------------------- */
+
+.link-quiet { display: inline-block; transition: color 0.3s var(--ease-out), transform 0.3s var(--ease-spring); }
+.link-quiet:hover { color: var(--brand-400); transform: translateX(3px); }
+.link-quiet:focus-visible { outline: 2px solid var(--brand-400); outline-offset: 3px; border-radius: 2px; }
+
+.link-ink { transition: color 0.3s var(--ease-out); }
+.link-ink:hover { color: var(--brand-600); }
+.link-ink:focus-visible { outline: 2px solid var(--brand-600); outline-offset: 3px; border-radius: 2px; }
+
+.link-underline { text-decoration: underline; text-underline-offset: 3px; }
+
+a:focus-visible, button:focus-visible, select:focus-visible {
+  outline: 2px solid var(--brand-400);
+  outline-offset: 2px;
+}
+
+.wa-fab {
+  background: linear-gradient(180deg, var(--brand-400) 0%, var(--brand-500) 55%, var(--brand-600) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 12px 26px -8px rgba(211, 105, 43, 0.65),
+    0 3px 8px rgba(12, 12, 14, 0.5);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-spring);
+}
+.wa-fab:hover { transform: translateY(-3px) scale(1.04); }
+.wa-fab:focus-visible { outline: 2px solid var(--chalk-50); outline-offset: 3px; }
+
+.stars { color: #F5B72A; letter-spacing: 0.12em; }
+
+/* gallery tiles */
+.tile { transition: transform 0.45s var(--ease-spring), box-shadow 0.45s var(--ease-spring); }
+.tile:hover { transform: translateY(-4px); box-shadow: 0 26px 48px -22px rgba(0, 0, 0, 0.9); }
+
+
+/* Alternating surface for the services page, so four consecutive card sections
+   step in tone rather than reading as one long dark block. */
+.section-step-soft {
+  background-image: linear-gradient(180deg, #1A1B1F 0%, #15161A 60%, #0F1013 100%);
+}
+
+/* The services intro travels across the backdrop with the sticky pin, so it
+   carries its own contrast rather than relying on the scrim beneath it. */
+.hscroll .hscroll-intro {
+  color: #D6D6D0;
+  text-shadow: 0 1px 2px rgba(12, 12, 14, 0.95), 0 2px 14px rgba(12, 12, 14, 0.8);
+}
